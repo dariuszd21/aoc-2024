@@ -66,8 +66,28 @@ pub fn solve_part_1(filepath: &str) -> usize {
         .count()
 }
 
-pub fn solve_part_2(filepath: &str) -> u64 {
-    0
+pub fn solve_part_2(filepath: &str) -> usize {
+    let levels = load_levels(filepath);
+
+    let mut res = 0;
+
+    for levels_vec in levels {
+        if is_safe(&levels_vec) {
+            res += 1;
+            continue;
+        }
+
+        for i in 0..levels_vec.len() {
+            let mut permutated_leves = levels_vec.clone();
+            permutated_leves.remove(i);
+            if is_safe(&permutated_leves) {
+                res += 1;
+                break;
+            }
+        }
+    }
+
+    res
 }
 
 #[cfg(test)]
@@ -81,6 +101,6 @@ mod tests {
 
     #[test]
     fn test_example_part2() {
-        assert_eq!(solve_part_2("input_01_test"), 31);
+        assert_eq!(solve_part_2("input_02_test"), 4);
     }
 }
