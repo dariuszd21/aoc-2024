@@ -1,12 +1,6 @@
 #[path = "utils.rs"]
 mod utils;
 
-use std::cmp;
-
-enum Operation {
-    Multiply,
-}
-
 fn load_lines(filepath: &str) -> Vec<Vec<char>> {
     let lines = utils::read_file(filepath);
     let mut matrix = Vec::new();
@@ -111,9 +105,67 @@ pub fn solve_part_1(filepath: &str) -> u64 {
     res
 }
 
+fn check_if_mas(text: String) -> bool {
+    let search = "MAS";
+    text == search || text == String::from_iter(search.chars().rev())
+}
+
+fn check_xmas(lines: &Vec<Vec<char>>, i: usize, j: usize) -> bool {
+    let number_of_lines = lines.len();
+    let number_of_cols = lines[0].len();
+
+    if i == 0 || j == 0 {
+        return false;
+    }
+
+    if i == number_of_lines - 1 || j == number_of_cols - 1 {
+        return false;
+    }
+
+    let (left_upper_i, left_upper_j) = (i - 1, j - 1);
+    let (right_lower_i, right_lower_j) = (i + 1, j + 1);
+
+    let first = String::from_iter(vec![
+        lines[left_upper_i][left_upper_j],
+        lines[i][j],
+        lines[right_lower_i][right_lower_j],
+    ]);
+
+    let (right_upper_i, right_upper_j) = (i - 1, j + 1);
+    let (left_lower_i, left_lower_j) = (i + 1, j - 1);
+
+    let second = String::from_iter(vec![
+        lines[right_upper_i][right_upper_j],
+        lines[i][j],
+        lines[left_lower_i][left_lower_j],
+    ]);
+
+    check_if_mas(first) && check_if_mas(second)
+}
+
 pub fn solve_part_2(filepath: &str) -> u64 {
     let lines = load_lines(filepath);
     let mut res = 0;
+
+    let mut all_a_positions = Vec::new();
+
+    let number_of_lines = lines.len();
+    let number_of_cols = lines[0].len();
+    for i in 0..number_of_lines {
+        for j in 0..number_of_cols {
+            match lines[i][j] {
+                'A' => all_a_positions.push((i, j)),
+                _ => (),
+            }
+        }
+    }
+
+    for (i, j) in all_a_positions {
+        println!("A found at {} {}", i, j);
+        if check_xmas(&lines, i, j) {
+            res += 1;
+        }
+    }
 
     res
 }
