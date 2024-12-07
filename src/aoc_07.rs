@@ -29,7 +29,6 @@ fn load_equation(lines: &Vec<String>) -> Vec<(u64, Vec<u64>)> {
 }
 
 fn is_valid(equation: &(u64, Vec<u64>)) -> bool {
-    let mut res = false;
     let (eq_res, values) = equation;
 
     let mut possible_res = Vec::new();
@@ -41,11 +40,12 @@ fn is_valid(equation: &(u64, Vec<u64>)) -> bool {
         possible_res.clear();
 
         for val in res_copy {
-            possible_res.push(val * values[i]);
-            possible_res.push(val + values[i]);
+            let mul_result = val * values[i];
+            possible_res.push(mul_result);
+            let sum_result = val + values[i];
+            possible_res.push(sum_result);
         }
     }
-    println!("Possible results: {:?}", possible_res);
 
     possible_res.contains(eq_res)
 }
@@ -65,6 +65,32 @@ pub fn solve_part_1(filepath: &str) -> u64 {
     res
 }
 
+fn is_valid_part_2(equation: &(u64, Vec<u64>)) -> bool {
+    let (eq_res, values) = equation;
+
+    let mut possible_res = Vec::new();
+
+    possible_res.push(values[0]);
+
+    for i in 1..values.len() {
+        let res_copy = possible_res.clone();
+        possible_res.clear();
+
+        for val in res_copy {
+            let mul_result = val * values[i];
+            possible_res.push(mul_result);
+
+            let sum_result = val + values[i];
+            possible_res.push(sum_result);
+
+            let concat_res = format!("{}{}", val, values[i]).parse().unwrap();
+            possible_res.push(concat_res);
+        }
+    }
+
+    possible_res.contains(eq_res)
+}
+
 pub fn solve_part_2(filepath: &str) -> u64 {
     let lines = load_lines(filepath);
     let mut res = 0;
@@ -72,7 +98,7 @@ pub fn solve_part_2(filepath: &str) -> u64 {
     let equations_vec = load_equation(&lines);
 
     for equation in equations_vec {
-        if is_valid(&equation) {
+        if is_valid_part_2(&equation) {
             println!("Equation: {:?} is valid", equation);
             res += equation.0;
         }
@@ -92,6 +118,6 @@ mod tests {
 
     #[test]
     fn test_example_part2() {
-        assert_eq!(solve_part_2("input_07_test"), 6);
+        assert_eq!(solve_part_2("input_07_test"), 11387);
     }
 }
