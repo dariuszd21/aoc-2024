@@ -1,7 +1,7 @@
 #[path = "utils.rs"]
 mod utils;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum FilesystemItem {
     FileBlock(u32),
     Empty,
@@ -100,13 +100,81 @@ pub fn solve_part_1(filepath: &str) -> u64 {
     calculate_checksum(&defragmented_fs)
 }
 
+fn get_fs_items(
+    filesystem_flattened_layout: &Vec<(FilesystemItem, u64)>,
+) -> Vec<(usize, (FilesystemItem, u64))> {
+    let mut reversed_fs_items = Vec::new();
+    for (i, (item, size)) in filesystem_flattened_layout.iter().enumerate().rev() {
+        match item {
+            FilesystemItem::FileBlock(file_id) => {
+                reversed_fs_items.push((i, (FilesystemItem::FileBlock(*file_id), *size)))
+            }
+            FilesystemItem::Empty => (),
+        };
+    }
+    reversed_fs_items
+}
+
+fn defragment_fs_part_2(filesystem_layout: &Vec<FilesystemItem>) -> Vec<FilesystemItem> {
+    let mut filesystem_flattened_layout: Vec<(FilesystemItem, u64)> = Vec::new();
+
+    let (mut prev_item, mut count) = (filesystem_layout[0].clone(), 1);
+    for i in 1..filesystem_layout.len() {
+        let item = &filesystem_layout[i];
+        if *item != prev_item {
+            filesystem_flattened_layout.push((prev_item, count));
+
+            count = 0;
+            prev_item = item.clone();
+        }
+        count += 1;
+    }
+    filesystem_flattened_layout.push((prev_item, count));
+
+    let reversed_fs_items = get_fs_items(&filesystem_flattened_layout);
+
+    // fix problems with indexing do not override elements
+    for (_, (fs_item, size)) in reversed_fs_items {
+        let current_fs_item_idx = filesystem_flattened_layout
+            .iter()
+            .position(|item| *item == (fs_item, size))
+            .unwrap();
+
+        for i in 0..current_fs_item_idx {
+            let (item, empty_block_size) = filesystem_flattened_layout[i].clone();
+            match item {
+                FilesystemItem::FileBlock(_) => (),
+                FilesystemItem::Empty => {
+                    if size <= empty_block_size {
+                        filesystem_flattened_layout[i] =
+                            (FilesystemItem::Empty, empty_block_size - size);
+                        filesystem_flattened_layout[current_fs_item_idx] =
+                            (FilesystemItem::Empty, size);
+                        filesystem_flattened_layout.insert(i, (fs_item.clone(), size));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    let mut defragmented = Vec::new();
+
+    for (item, amount) in &filesystem_flattened_layout {
+        for _ in 0..*amount {
+            defragmented.push(item.clone());
+        }
+    }
+
+    defragmented
+}
 pub fn solve_part_2(filepath: &str) -> u64 {
     let lines = load_lines(filepath);
 
     let fs_layout = load_filesystem_layout(&lines);
-    let mut checksum = 0;
+    let defragmented_fs = defragment_fs_part_2(&fs_layout);
 
-    checksum
+    calculate_checksum(&defragmented_fs)
 }
 
 #[cfg(test)]
@@ -144,6 +212,6 @@ mod tests {
 
     #[test]
     fn test_example_part2() {
-        assert_eq!(solve_part_2("input_09_test"), 34);
+        assert_eq!(solve_part_2("input_09_test"), 2858);
     }
 }
