@@ -107,12 +107,48 @@ pub fn solve_part_1(filepath: &str) -> u64 {
     res
 }
 
+fn calculate_trailhead_rating(map: &Vec<Vec<MapScale>>, x: usize, y: usize) -> u64 {
+    let mut score = 0;
+    let current_map_item = map[x][y];
+    let current_height = match current_map_item {
+        MapScale::Height(h) => h,
+    };
+
+    if current_map_item == MapScale::Height(9) {
+        return 1;
+    } else {
+        let map_height = map.len();
+        let map_width = map[0].len();
+        let next_height = MapScale::Height(current_height + 1);
+        if x > 0 && map[x - 1][y] == next_height {
+            score += calculate_trailhead_rating(map, x - 1, y);
+        }
+        if y > 0 && map[x][y - 1] == next_height {
+            score += calculate_trailhead_rating(map, x, y - 1);
+        }
+        if x < map_height - 1 && map[x + 1][y] == next_height {
+            score += calculate_trailhead_rating(map, x + 1, y);
+        }
+
+        if y < map_width - 1 && map[x][y + 1] == next_height {
+            score += calculate_trailhead_rating(map, x, y + 1);
+        }
+    }
+
+    score
+}
 pub fn solve_part_2(filepath: &str) -> u64 {
     let lines = load_lines(filepath);
 
-    let fs_layout = load_map(&lines);
+    let map = load_map(&lines);
 
     let mut res = 0;
+    let start_points = find_starting_points(&map);
+
+    for (start_x, start_y) in start_points {
+        let current_score = calculate_trailhead_rating(&map, start_x, start_y);
+        res += current_score;
+    }
 
     res
 }
@@ -128,6 +164,6 @@ mod tests {
 
     #[test]
     fn test_example_part2() {
-        assert_eq!(solve_part_2("input_10_test"), 2858);
+        assert_eq!(solve_part_2("input_10_test"), 81);
     }
 }
