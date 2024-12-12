@@ -1,9 +1,9 @@
-mod aoc_10;
+mod aoc_11;
 
 fn main() {
-    let res = aoc_10::solve_part_1("input_10");
+    let res = aoc_11::solve_part_1("input_11");
     println!("Result: {}", res);
 
-    let res = aoc_10::solve_part_2("input_10");
+    let res = aoc_11::solve_part_2("input_11");
     println!("Result: {}", res);
 }
