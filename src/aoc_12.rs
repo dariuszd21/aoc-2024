@@ -105,7 +105,6 @@ pub fn solve_part_1(filepath: &str) -> u64 {
     }
 
     while let Some((plant_x, plant_y)) = find_unvisited(&visited_plants) {
-        let plant = plants[plant_x][plant_y];
         let (perimeter, area) = calculate_area(&plants, plant_x, plant_y, &mut visited_plants);
         res += perimeter * area;
     }
