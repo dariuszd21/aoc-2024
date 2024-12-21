@@ -165,11 +165,52 @@ pub fn solve_part_1(filepath: &str) -> u64 {
         robots = run_simulation(&robots, map_height, map_width);
     }
 
-    print_robots(&robots, map_height, map_width);
-
     let quadrants = robots_per_quardant(&robots, map_height, map_width);
 
     quadrants.q1 * quadrants.q2 * quadrants.q3 * quadrants.q4
+}
+
+fn find_christmas_tree(robots: &Vec<Robot>) -> bool {
+    let mut robots_map: HashMap<(i64, i64), u64> = HashMap::new();
+
+    for robot in robots {
+        match robots_map.get(&(robot.x, robot.y)) {
+            Some(amount) => robots_map.insert((robot.x, robot.y), amount + 1),
+            None => robots_map.insert((robot.x, robot.y), 1),
+        };
+    }
+
+    *robots_map.values().max().unwrap() == 1
+}
+
+fn count_cycles(robot: &Robot, map_height: i64, map_width: i64) -> u64 {
+    let mut cycles = 0;
+
+    let (mut x, mut y) = (robot.x, robot.y);
+    loop {
+        cycles += 1;
+        x += robot.v.x;
+        y += robot.v.y;
+
+        if x < 0 {
+            x += map_width;
+        }
+        if x >= map_width {
+            x -= map_width;
+        }
+        if y < 0 {
+            y += map_height;
+        }
+        if y >= map_height {
+            y -= map_height;
+        }
+
+        if (x == robot.x) && (y == robot.y) {
+            break;
+        }
+    }
+
+    cycles
 }
 
 pub fn solve_part_2(filepath: &str) -> u64 {
@@ -181,11 +222,22 @@ pub fn solve_part_2(filepath: &str) -> u64 {
 
     let mut robots = load_robots(lines);
 
-    for i in 0..100 {
-        println!("Iteration: {}", i);
+    // finding how many positions every robot can have (to know what's the max)
+    // let cycles: HashMap<(i64, i64), u64> = robots
+    //     .iter()
+    //     .map(|r| ((r.x, r.y), count_cycles(r, map_height, map_width)))
+    //     .collect();
+    //
+    // println!("Cycles {:?}", cycles);
+    // for (start_pos, c) in &cycles {
+    //     if *c != 10403 {
+    //         println!("{:?}, {}", start_pos, c);
+    //     }
+    // }
+
+    while !find_christmas_tree(&robots) {
+        res += 1;
         robots = run_simulation(&robots, map_height, map_width);
-        print_robots(&robots, map_height, map_width);
-        println!("###############\n\n");
     }
 
     res
@@ -217,6 +269,18 @@ mod tests {
 
     #[test]
     fn test_example_part2() {
-        assert_eq!(solve_part_2("input_14_test"), 875318608908);
+        let lines = load_lines("input_14_test_2");
+        let mut res = 0;
+
+        let map_height = 7;
+        let map_width = 11;
+
+        let mut robots = load_robots(lines);
+        println!("Number of robots: {}", robots.len());
+
+        print_robots(&robots, map_height, map_width);
+        let target = find_christmas_tree(&robots);
+
+        assert!(target);
     }
 }
